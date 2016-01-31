@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"time"
 	"log"
+	"strconv"
 )
 
 type Param struct {
 	Name string `json:"name"`
 	Email string `json:"email"`
-	Numbers []int `json:"numbers"`
+	Numbers int `json:"numbers"`
 }
 
 func handler(w http.ResponseWriter, r *http.Request)	{
@@ -19,13 +20,18 @@ func handler(w http.ResponseWriter, r *http.Request)	{
 }
 
 func postParamHandler(w http.ResponseWriter, r *http.Request)	{
-	params := Param{
-		Name: "nabil",
-		Email: "nabil.sooz@gmail.com",
-		Numbers: []int{111,222,333},
+	r.ParseForm()
+
+	nums, err := strconv.Atoi(r.FormValue("numbers"))
+
+	if err != nil	{
+		http.Error(w, error.Error(err), 500)
+		return
 	}
 
-	p, err := json.Marshal(params)
+	p := &Param{r.FormValue("name"), r.FormValue("email"), nums*2}
+
+	n, err := json.Marshal(p)
 
 	if err != nil	{
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -33,7 +39,7 @@ func postParamHandler(w http.ResponseWriter, r *http.Request)	{
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(p)
+	w.Write(n)
 }
 
 func getTimeHandler(w http.ResponseWriter, r *http.Request)	{
@@ -53,7 +59,7 @@ func main() {
 	http.HandleFunc("/params", postParamHandler)
 	http.HandleFunc("/time", getTimeHandler)
 
-	err := http.ListenAndServe(":3030", nil)
+	err := http.ListenAndServe(":1112", nil)
 	if err != nil	{
 		log.Fatal("ListenAndServe: ", err)
 	}
